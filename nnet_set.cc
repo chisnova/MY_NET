@@ -494,8 +494,8 @@ class Image
 			int k_width=poolsize;
 			int k_depth=poolsize;
 			int k_size=(k_width)*(k_depth);
-			for(int i=0;i<i_depth;i+=2){
-				for(int j=0;j<i_width;j+=2){
+			for(int i=0;i<i_depth;i+=poolsize){
+				for(int j=0;j<i_width;j+=poolsize){
 					double max=-987654321;
 					if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 					double sum=0;
@@ -504,7 +504,7 @@ class Image
 						int dy=k%k_width;
 						if(in->val[i+dx][j+dy]>max) max=in->val[i+dx][j+dy];
 					}
-					out->val[i/2][j/2]=max;	
+					out->val[i/poolsize][j/poolsize]=max;	
 				}
 			}
 		}
@@ -516,8 +516,8 @@ class Image
 			int k_width=poolsize;
 			int k_depth=poolsize;
 			int k_size=(k_width)*(k_depth);
-			for(int i=0;i<i_depth;i+=2){
-				for(int j=0;j<i_width;j+=2){
+			for(int i=0;i<i_depth;i+=poolsize){
+				for(int j=0;j<i_width;j+=poolsize){
 					if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 					int max_x,max_y;
 					double max=-987654321;
@@ -534,7 +534,7 @@ class Image
 						int dx=k/k_width;
 						int dy=k%k_width;
 						if(max_x==(i+dx) && max_y==(j+dy)){
-							in->err[i+dx][j+dy]=out->err[i/2][j/2];
+							in->err[i+dx][j+dy]=out->err[i/poolsize][j/poolsize];
 						}
 						else{
 							in->err[i+dx][j+dy]=0;
@@ -551,8 +551,8 @@ class Image
 			int k_width=poolsize;
 			int k_depth=poolsize;
 			int k_size=(k_width)*(k_depth);
-			for(int i=0;i<i_depth;i+=2){
-				for(int j=0;j<i_width;j+=2){
+			for(int i=0;i<i_depth;i+=poolsize){
+				for(int j=0;j<i_width;j+=poolsize){
 					if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 					double sum=0;
 					for(int k=0;k<k_size;++k){
@@ -560,7 +560,7 @@ class Image
 						int dy=k%k_width;
 						sum+=(in->val[i+dx][j+dy]);	
 					}
-					out->val[i/2][j/2]=sum/(double)k_size;	
+					out->val[i/poolsize][j/poolsize]=sum/(double)k_size;	
 				}
 			}
 		}
@@ -572,13 +572,13 @@ class Image
 			int k_width=poolsize;
 			int k_depth=poolsize;
 			int k_size=(k_width)*(k_depth);
-			for(int i=0;i<i_depth;i+=2){
-				for(int j=0;j<i_width;j+=2){
+			for(int i=0;i<i_depth;i+=poolsize){
+				for(int j=0;j<i_width;j+=poolsize){
 					if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 					for(int k=0;k<k_size;++k){
 						int dx=k/k_width;
 						int dy=k%k_width;
-						in->err[i+dx][j+dy]=(out->err[i/2][j/2])/(double)k_size;
+						in->err[i+dx][j+dy]=(out->err[i/poolsize][j/poolsize])/(double)k_size;
 					}
 				}
 			}
