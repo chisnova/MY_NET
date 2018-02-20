@@ -1,0 +1,4 @@
+
+rm -rf a
+g++ nnet_set.cc -o a
+./a
