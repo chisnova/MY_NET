@@ -1,5 +1,7 @@
 #ifndef _layer_h_
 #define _layer_h_
+#include <math.h>
+#include "data.h"
 
 namespace MY_NET
 {

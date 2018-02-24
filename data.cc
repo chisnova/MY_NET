@@ -1,5 +1,4 @@
 #include "data.h"
-
 namespace MY_NET
 {
 	

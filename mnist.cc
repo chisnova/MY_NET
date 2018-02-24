@@ -1,6 +1,4 @@
-
 #include "mnist.h"
-
 
 int readMnist(mnist* train,mnist* test)
 {
@@ -14,7 +12,7 @@ int readMnist(mnist* train,mnist* test)
 	FILE* train_image_f;
 	FILE* test_label_f;
 	FILE* test_image_f;
-	
+
 	test_image_f = fopen("MNIST/t10k-images-idx3-ubyte","rb");
 	test_label_f = fopen("MNIST/t10k-labels-idx1-ubyte","rb");
 	train_image_f = fopen("MNIST/train-images-idx3-ubyte","rb");	

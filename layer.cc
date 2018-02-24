@@ -1,3 +1,4 @@
+#include "layer.h"
 
 namespace MY_NET
 {

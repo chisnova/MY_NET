@@ -1,6 +1,8 @@
 #ifndef _MINST_
 #define _MINST_
 #include <stdlib.h>
+#include <stdio.h>
+
 typedef struct _MNIST_
 {
 	double image[60000][32][32];
