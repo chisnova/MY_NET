@@ -24,14 +24,14 @@ void DNN()
 	int layer_info[layer_size]={32*32,100,100,10,10};
 	char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
 
-	type_1D::type_1D* x[layer_size];
-	for(int i=0;i<layer_size;++i) x[i]=new type_1D::type_1D(layer_info[i]);
+	type_1D* x[layer_size];
+	for(int i=0;i<layer_size;++i) x[i]=new type_1D(layer_info[i]);
 
-	type_2D::type_2D* w[layer_size];
+	type_2D* w[layer_size];
 	int cnt=0;
 	for(int i=0;i<layer_size-1;++i){
 		if(strcmp(function_info[i],"affine")==0){
-			w[i] = new type_2D::type_2D(layer_info[i+1],layer_info[i]);
+			w[i] = new type_2D(layer_info[i+1],layer_info[i]);
 		}
 	}
 	
@@ -112,23 +112,23 @@ void LeNet()
 	double lr=0.001;
 
     //conv,pool,conv,pool,conv//
-	Layer_type_2D* x0 = new Layer_type_2D::Layer_type_2D(1,32,32);
-	Layer_type_2D* k0 = new Layer_type_2D::Layer_type_2D(6,5,5);
-	Layer_type_2D* x1 = new Layer_type_2D::Layer_type_2D(6,28,28);
-	Layer_type_2D* s1 = new Layer_type_2D::Layer_type_2D(6,14,14);
-	Layer_type_2D* k1 = new Layer_type_2D::Layer_type_2D(16,5,5);
-	Layer_type_2D* x2 = new Layer_type_2D::Layer_type_2D(16,10,10);
-	Layer_type_2D* s2 = new Layer_type_2D::Layer_type_2D(16,5,5);
-	Layer_type_2D* k2 = new Layer_type_2D::Layer_type_2D(120,5,5);
-	Layer_type_2D* x3 = new Layer_type_2D::Layer_type_2D(120,1,1);
+	Layer_type_2D* x0 = new Layer_type_2D(1,32,32);
+	Layer_type_2D* k0 = new Layer_type_2D(6,5,5);
+	Layer_type_2D* x1 = new Layer_type_2D(6,28,28);
+	Layer_type_2D* s1 = new Layer_type_2D(6,14,14);
+	Layer_type_2D* k1 = new Layer_type_2D(16,5,5);
+	Layer_type_2D* x2 = new Layer_type_2D(16,10,10);
+	Layer_type_2D* s2 = new Layer_type_2D(16,5,5);
+	Layer_type_2D* k2 = new Layer_type_2D(120,5,5);
+	Layer_type_2D* x3 = new Layer_type_2D(120,1,1);
 
-	type_1D* dx1 = new type_1D::type_1D(120);
-	type_2D* dw1 = new type_2D::type_2D(84,120);
-	type_1D* dx2 = new type_1D::type_1D(84);
-	type_1D* da2 = new type_1D::type_1D(84);
-	type_2D* dw2 = new type_2D::type_2D(10,84);
-	type_1D* dx3 = new type_1D::type_1D(10);
-	type_1D* da3 = new type_1D::type_1D(10);
+	type_1D* dx1 = new type_1D(120);
+	type_2D* dw1 = new type_2D(84,120);
+	type_1D* dx2 = new type_1D(84);
+	type_1D* da2 = new type_1D(84);
+	type_2D* dw2 = new type_2D(10,84);
+	type_1D* dx3 = new type_1D(10);
+	type_1D* da3 = new type_1D(10);
 
 	int hit;
 	int miss;
