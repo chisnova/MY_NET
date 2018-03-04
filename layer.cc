@@ -116,10 +116,12 @@ namespace MY_NET
 		MatMul(out,Trans,in,lr);
 		for(int i=0;i<w->row;++i){
 			for(int j=0;j<w->col;++j){
-				w->val[i][j]-=lr*(in->val[j])*(out->err[i]);
+				w->val[i][j]=0.99*(w->val[i][j])-lr*(in->val[j])*(out->err[i]);
 			}
 		}
-		for(int i=0;i<out->size;++i) out->bias[i]+=(out->err[i])*lr;
+		for(int i=0;i<out->size;++i){
+			out->bias[i]=0.99*out->bias[i]+(out->err[i])*lr;
+		}
 		delete Trans;
 	}
 	//Layer 2D
@@ -314,7 +316,7 @@ namespace MY_NET
 	   						dx=k%k_width;
 	   						if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 	   						update=(in->image[n]->val[i+dy][j+dx])*(out->image[m]->err[i][j]);	
-							kernel->image[m]->val[dy][dx]-=update*lr;
+							kernel->image[m]->val[dy][dx]=0.99*(kernel->image[m]->val[dy][dx])-update*lr;
 	   					}
 	   				}	
 				}
