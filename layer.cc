@@ -4,28 +4,41 @@ namespace MY_NET
 {
 	bool layer::isRange(int w,int w_max,int d,int d_max)
 	{
-		if(w <= w_max && d <= d_max) return true;
+		if(w < w_max && d < d_max) return true;
 		return false;
 	}
 
-	void layer::MatMul(type_1D* in, type_2D* w,type_1D* out)
+	void layer::affine(type_1D* in,type_2D* w,type_1D* out)
 	{
+		double sum;
 		for(int i=0;i<w->row;++i){
-		double sum=0;
+			sum=0;
 			for(int j=0;j<w->col;++j){
 				sum+=(w->val[i][j])*(in->val[j]);	
 			}
 			out->val[i]=sum;
 		}
+		for(int i=0;i<out->size;++i) out->val[i]+=out->bias[i];
 	}
-	void layer::MatMul(type_1D* in, type_2D* w,type_1D* out,double lr)
+
+	void layer::affine(type_1D* in,type_2D* w,type_1D* out,double lr)
 	{
-		for(int i=0;i<w->row;++i){
-		double sum=0;
-			for(int j=0;j<w->col;++j){
-				sum+=(w->val[i][j])*(in->err[j]);	
+		double sum;
+		for(int j=0;j<w->col;++j){
+			sum=0;
+			for(int i=0;i<w->row;++i){
+				sum+=(w->val[i][j])*(out->err[i]);	
 			}
-			out->err[i]=sum;
+			in->err[j]=sum;
+		}
+
+		for(int i=0;i<w->row;++i){
+			for(int j=0;j<w->col;++j){
+				w->val[i][j]-=lr*(in->val[j])*(out->err[i]);
+			}
+		}
+		for(int i=0;i<out->size;++i){
+			out->bias[i]-=(out->err[i])*lr;
 		}
 	}
 
@@ -35,10 +48,12 @@ namespace MY_NET
 			out->val[i]=1/(1+exp(-(in->val[i])));	
 		}
 	}
+
 	void layer::sigmoid(type_1D* in,type_1D* out,double lr)
 	{
+		double y;
 		for(int i=0;i<in->size;++i){
-			double y=1/(1+exp(-(in->val[i])));
+			y=1/(1+exp(-(in->val[i])));
 			in->err[i]=y*(1-y)*(out->err[i]);	
 		}
 	}
@@ -99,31 +114,6 @@ namespace MY_NET
 		}
 	}
 
-	void layer::affine(type_1D* in,type_2D* w,type_1D* out)
-	{
-		MatMul(in,w,out);
-		for(int i=0;i<out->size;++i) out->val[i]-=out->bias[i];
-	}
-
-	void layer::affine(type_1D* in,type_2D* w,type_1D* out,double lr)
-	{
-		type_2D* Trans=new type_2D(w->col,w->row);
-		for(int i=0;i<w->row;++i){
-			for(int j=0;j<w->col;++j){
-				Trans->val[j][i]=w->val[i][j];	
-			}
-		}
-		MatMul(out,Trans,in,lr);
-		for(int i=0;i<w->row;++i){
-			for(int j=0;j<w->col;++j){
-				w->val[i][j]=0.99*(w->val[i][j])-lr*(in->val[j])*(out->err[i]);
-			}
-		}
-		for(int i=0;i<out->size;++i){
-			out->bias[i]=0.99*out->bias[i]+(out->err[i])*lr;
-		}
-		delete Trans;
-	}
 	//Layer 2D
 	void layer::sigmoid(Layer_type_2D* in,Layer_type_2D* out)
 	{
@@ -159,8 +149,8 @@ namespace MY_NET
 			for(int i=0;i<in->row;++i){
 				for(int j=0;j<in->col;++j){
 					x=in->image[k]->val[i][j];
-					if(in->image[k]->val[i][j]>=0) out->image[k]->val[i][j]=x;
-					else out->image[k]->val[i][j]=0;
+					if(in->image[k]->val[i][j]<=0) out->image[k]->val[i][j]=0;
+					else out->image[k]->val[i][j]=x;
 				}
 			}
 		}
@@ -171,7 +161,7 @@ namespace MY_NET
 		for(int k=0;k<in->size;++k){
 			for(int i=0;i<in->row;++i){
 				for(int j=0;j<in->col;++j){
-					err=in->image[k]->err[i][j];
+					err=out->image[k]->err[i][j];
 					if(in->image[k]->val[i][j]<=0) in->image[i]->err[i][j]=0;
 					else in->image[k]->err[i][j]=err;
 				}
@@ -200,7 +190,7 @@ namespace MY_NET
 			for(int i=0;i<in->row;++i){
 				for(int j=0;j<in->col;++j){
 					y=out->image[k]->val[i][j];
-					err=in->image[k]->err[i][j];
+					err=out->image[k]->err[i][j];
 					in->image[k]->err[i][j]=(1+y)*(1-y)*err;	
 				}
 			}
@@ -256,19 +246,21 @@ namespace MY_NET
 		int k_width=kernel->col;
 		int k_depth=kernel->row;
 		int k_size=(k_width)*(k_depth);
+		int dy,dx;
+		double sum;
 
 		for(int m=0;m<kernel->size;++m){
-			for(int n=0;n<in->size;++n){
+			for(int n=0;n<i_size;++n){
 				for(int i=0;i<i_depth;++i){
 					for(int j=0;j<i_width;++j){
 						if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
-						double sum=0;
+						sum=0;
 						for(int k=0;k<k_size;++k){
-							int dy=k/k_width;
-							int dx=k%k_width;
+							dy=k/k_width;
+							dx=k%k_width;
 							sum+=(in->image[n]->val[i+dy][j+dx])*(kernel->image[m]->val[dy][dx]);	
 						}
-						if(n==0) out->image[m]->val[i][j]=sum;	
+						if(n==0) out->image[m]->val[i][j]=sum;
 						else out->image[m]->val[i][j]+=sum;	
 					}	
 				}
@@ -288,7 +280,7 @@ namespace MY_NET
 		double err;
 		double k_value;
 
-		for(int n=0;n<in->size;++n){
+		for(int n=0;n<i_size;++n){
 			in->image[n]->zero_err();
 			for(int m=0;m<kernel->size;++m){
 	   			for(int i=0;i<i_depth;++i){
@@ -307,8 +299,9 @@ namespace MY_NET
 		}
 
 		double update;
+		double norm=(double(out->col))*(double(out->row))*(double(i_size));
 		for(int m=0;m<kernel->size;++m){
-			for(int n=0;n<in->size;++n){
+			for(int n=0;n<i_size;++n){
 				for(int i=0;i<i_depth;++i){
 	   				for(int j=0;j<i_width;++j){
 	   					for(int k=0;k<k_size;++k){
@@ -316,7 +309,7 @@ namespace MY_NET
 	   						dx=k%k_width;
 	   						if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 	   						update=(in->image[n]->val[i+dy][j+dx])*(out->image[m]->err[i][j]);	
-							kernel->image[m]->val[dy][dx]=0.99*(kernel->image[m]->val[dy][dx])-update*lr;
+							kernel->image[m]->val[dy][dx]-=update*lr/norm;
 	   					}
 	   				}	
 				}
@@ -392,10 +385,10 @@ namespace MY_NET
 		int k_size=(k_width)*(k_depth);
 		double sum;
 		int dy,dx;
-
+		int i,j;
 		for(int n=0;n<in->size;++n){
-			for(int i=0;i<i_depth;i+=poolsize){
-				for(int j=0;j<i_width;j+=poolsize){
+			for(i=0;i<i_depth;i+=poolsize){
+				for(j=0;j<i_width;j+=poolsize){
 					if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 					sum=0;
 					for(int k=0;k<k_size;++k){

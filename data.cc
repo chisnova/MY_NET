@@ -11,15 +11,15 @@ type_1D::type_1D(int sz)
 	double tmp;
 	for(int i=0;i<size;++i){
 		tmp=double(rand()%1000-500);
-		tmp=tmp*0.001;
+		tmp=tmp*0.0001;
 		val[i]=tmp;	
 		
 		tmp=double(rand()%1000-500);
-		tmp=tmp*0.001;
+		tmp=tmp*0.0001;
 		err[i]=tmp;	
 
 		tmp=double(rand()%1000-500);
-		tmp=tmp*0.001;
+		tmp=tmp*0.0001;
 		bias[i]=tmp;	
 	}
 }
@@ -69,11 +69,11 @@ type_2D::type_2D(int i_row,int i_col)
 	for(int i=0;i<row;++i){
 		for(int j=0;j<col;++j){
 			tmp=double(rand()%1000-500);
-			tmp=tmp*0.001;
+			tmp=tmp*0.0001;
 			val[i][j]=tmp;	
 
 			tmp=double(rand()%1000-500);
-			tmp=tmp*0.001;
+			tmp=tmp*0.0001;
 			err[i][j]=tmp;	
 		}
 	}
