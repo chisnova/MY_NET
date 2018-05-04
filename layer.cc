@@ -4,7 +4,7 @@ namespace MY_NET
 {
 	bool layer::isRange(int w,int w_max,int d,int d_max)
 	{
-		if(w < w_max && d < d_max) return true;
+		if(w <= w_max && d <= d_max) return true;
 		return false;
 	}
 
@@ -61,7 +61,7 @@ namespace MY_NET
 	void layer::relu(type_1D* in,type_1D* out)
 	{
 		for(int i=0;i<in->size;++i){
-			if(in->val[i]>=0) out->val[i]=in->val[i];
+			if(in->val[i] > 0) out->val[i]=in->val[i];
 			else out->val[i]=0;
 		}
 	}
@@ -162,7 +162,7 @@ namespace MY_NET
 			for(int i=0;i<in->row;++i){
 				for(int j=0;j<in->col;++j){
 					err=out->image[k]->err[i][j];
-					if(in->image[k]->val[i][j]<=0) in->image[i]->err[i][j]=0;
+					if(in->image[k]->val[i][j]<=0) in->image[k]->err[i][j]=0;
 					else in->image[k]->err[i][j]=err;
 				}
 			}
@@ -299,7 +299,6 @@ namespace MY_NET
 		}
 
 		double update;
-		double norm=(double(out->col))*(double(out->row))*(double(i_size));
 		for(int m=0;m<kernel->size;++m){
 			for(int n=0;n<i_size;++n){
 				for(int i=0;i<i_depth;++i){
@@ -309,7 +308,7 @@ namespace MY_NET
 	   						dx=k%k_width;
 	   						if(!isRange(i+k_depth,i_depth,j+k_width,i_width)) break;
 	   						update=(in->image[n]->val[i+dy][j+dx])*(out->image[m]->err[i][j]);	
-							kernel->image[m]->val[dy][dx]-=update*lr/norm;
+							kernel->image[m]->val[dy][dx]-=update*lr;
 	   					}
 	   				}	
 				}

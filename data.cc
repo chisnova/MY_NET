@@ -10,17 +10,12 @@ type_1D::type_1D(int sz)
 	bias=(double*)malloc(sizeof(double)*size);
 	double tmp;
 	for(int i=0;i<size;++i){
-		tmp=double(rand()%1000-500);
+		tmp=double(rand()%10000-5000);
 		tmp=tmp*0.0001;
 		val[i]=tmp;	
 		
-		tmp=double(rand()%1000-500);
-		tmp=tmp*0.0001;
-		err[i]=tmp;	
-
-		tmp=double(rand()%1000-500);
-		tmp=tmp*0.0001;
-		bias[i]=tmp;	
+		err[i]=0;	
+		bias[i]=0;	
 	}
 }
 void type_1D::show_val()
@@ -68,13 +63,11 @@ type_2D::type_2D(int i_row,int i_col)
 	double tmp;
 	for(int i=0;i<row;++i){
 		for(int j=0;j<col;++j){
-			tmp=double(rand()%1000-500);
+			tmp=double(rand()%10000-5000);
 			tmp=tmp*0.0001;
 			val[i][j]=tmp;	
 
-			tmp=double(rand()%1000-500);
-			tmp=tmp*0.0001;
-			err[i][j]=tmp;	
+			err[i][j]=0;	
 		}
 	}
 }

@@ -111,8 +111,8 @@ void LeNet()
 	readMnist(&train_data,&test_data);
 	int tr_size=100;
 	int test_size=10;
-	double lr=0.01;
-	int batch_size=300;
+	double lr=0.000000001;
+	int batch_size=100;
 
     //conv,pool,conv,pool,conv//
 	Layer_type_2D* x0 = new Layer_type_2D(1,32,32);
@@ -149,7 +149,7 @@ void LeNet()
 
 	double Recog;
 	double MSE;
-
+	int idx;
 	batch_tr=(double***)malloc(sizeof(double**)*batch_size);
 	batch_idx=(int*)malloc(sizeof(int)*batch_size);
 
@@ -171,8 +171,7 @@ void LeNet()
 		var=0;
 		stv=0;
 		for(int i=0;i<batch_size;++i){
-			int idx=rand()%60000;
-			idx=i;
+			idx=rand()%60000;
 			for(int j=0;j<32;++j){
 				for(int k=0;k<32;++k){
 					batch_tr[i][j][k]=train_data.image[idx][j][k];
@@ -195,21 +194,25 @@ void LeNet()
 		for(int batch=0;batch<batch_size;++batch){
 			for(int i=0;i<32;++i){
 				for(int j=0;j<32;++j){ 
-					//x0->image[0]->val[i][j]=(batch_tr[batch][i][j]-mean)/stv;
-					x0->image[0]->val[i][j]=batch_tr[batch][i][j]*0.01;
+					x0->image[0]->val[i][j]=(batch_tr[batch][i][j]-mean)/stv;
+					//x0->image[0]->val[i][j]=batch_tr[batch][i][j]*0.001;
 				}
 			}
 
 			train.conv(x0,k0,x1);	
-			train.average_pooling(x1,s1,2);	
+			train.relu(x1,a1);	
+			train.average_pooling(a1,s1,2);	
 			train.conv(s1,k1,x2);
-			train.average_pooling(x2,s2,2);
+			train.sigmoid(x2,a2);	
+			train.average_pooling(a2,s2,2);
 			train.conv(s2,k2,x3);
-			for(int i=0;i<120;++i)	dx1->val[i]=x3->image[i]->val[0][0];
+			train.sigmoid(x3,a3);
+			for(int i=0;i<120;++i)	dx1->val[i]=a3->image[i]->val[0][0];
 			train.affine(dx1,dw1,dx2);
-			train.relu(dx2,da2);
+			train.sigmoid(dx2,da2);
 			train.affine(da2,dw2,dx3);
 			train.sigmoid(dx3,da3);
+
 			if(da3->max_idx()==batch_idx[batch]) hit++;
 			else miss++;
 			for(int i=0;i<10;++i){
@@ -220,13 +223,16 @@ void LeNet()
 			}
 			train.sigmoid(dx3,da3,lr);
 			train.affine(da2,dw2,dx3,lr);
-			train.relu(dx2,da2,lr);
+			train.sigmoid(dx2,da2,lr);
 			train.affine(dx1,dw1,dx2,lr);
-			for(int i=0;i<120;++i) x3->image[i]->err[0][0]=dx1->err[i];
+			for(int i=0;i<120;++i) a3->image[i]->err[0][0]=dx1->err[i];
+			train.sigmoid(x3,a3,lr);
 			train.conv(s2,k2,x3,lr);
-			train.average_pooling(x2,s2,2,lr);
+			train.average_pooling(a2,s2,2,lr);
+			train.sigmoid(x2,a2,lr);	
 			train.conv(s1,k1,x2,lr);
-			train.average_pooling(x1,s1,2,lr);	
+			train.average_pooling(a1,s1,2,lr);	
+			train.relu(x1,a1,lr);	
 			train.conv(x0,k0,x1,lr);	
 		}
 
@@ -241,18 +247,21 @@ void LeNet()
 		for(int tr=0;tr<test_size;++tr){
 			//FORWARD
 			for(int i=0;i<32;++i){for(int j=0;j<32;++j){
-				//x0->image[0]->val[i][j]=(test_data.image[tr][i][j]-mean)/stv;
-				x0->image[0]->val[i][j]=test_data.image[tr][i][j]*0.01;
+				x0->image[0]->val[i][j]=(test_data.image[tr][i][j]-mean)/stv;
+				//x0->image[0]->val[i][j]=test_data.image[tr][i][j]*0.001;
 			}}
 			
 			train.conv(x0,k0,x1);	
-			train.average_pooling(x1,s1,2);	
+			train.relu(x1,a1);	
+			train.average_pooling(a1,s1,2);	
 			train.conv(s1,k1,x2);
-			train.average_pooling(x2,s2,2);
+			train.sigmoid(x2,a2);	
+			train.average_pooling(a2,s2,2);
 			train.conv(s2,k2,x3);
-			for(int i=0;i<120;++i)	dx1->val[i]=x3->image[i]->val[0][0];
+			train.sigmoid(x3,a3);
+			for(int i=0;i<120;++i)	dx1->val[i]=a3->image[i]->val[0][0];
 			train.affine(dx1,dw1,dx2);
-			train.relu(dx2,da2);
+			train.sigmoid(dx2,da2);
 			train.affine(da2,dw2,dx3);
 			train.sigmoid(dx3,da3);
 
