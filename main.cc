@@ -110,9 +110,9 @@ void LeNet()
 	srand((unsigned int)time(NULL));
 	readMnist(&train_data,&test_data);
 	int tr_size=100;
-	int test_size=10;
+	int test_size=100;
 	double lr=0.001;
-	int batch_size=5;
+	int batch_size=1000;
 
     //conv,pool,conv,pool,conv//
 	Layer_type_2D* x0 = new Layer_type_2D(1,32,32);
@@ -173,7 +173,6 @@ void LeNet()
 		stv=0;
 		for(int i=0;i<batch_size;++i){
 			idx=rand()%60000;
-			idx=i;
 			for(int j=0;j<32;++j){
 				for(int k=0;k<32;++k){
 					batch_tr[i][j][k]=train_data.image[idx][j][k];
@@ -213,7 +212,7 @@ void LeNet()
 			train.affine(dx1,dw1,dx2);
 			train.relu(dx2,da2);
 			train.affine(da2,dw2,dx3);
-			train.softmax(dx3,da3);
+			train.sigmoid(dx3,da3);
 
 			if(da3->max_idx()==batch_idx[batch]) hit++;
 			else miss++;
@@ -223,7 +222,7 @@ void LeNet()
 				da3->err[i]=err;
 				mse+=err*err;
 			}
-			train.softmax(dx3,da3,lr);
+			train.sigmoid(dx3,da3,lr);
 			train.affine(da2,dw2,dx3,lr);
 			train.relu(dx2,da2,lr);
 			train.affine(dx1,dw1,dx2,lr);
@@ -241,6 +240,8 @@ void LeNet()
 
 
 		Recog=double(hit)/(double(hit)+double(miss))*100;
+
+		MSE=sqrt(mse/double(hit+miss));
 		printf("Train Recognition Rate %lf Train MSE %lf\n",Recog,MSE);
 
 		hit=0;
@@ -266,7 +267,7 @@ void LeNet()
 			train.affine(dx1,dw1,dx2);
 			train.relu(dx2,da2);
 			train.affine(da2,dw2,dx3);
-			train.softmax(dx3,da3);
+			train.sigmoid(dx3,da3);
 
 			if(da3->max_idx()==test_data.idx[tr]) hit++;
 			else miss++;

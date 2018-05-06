@@ -3,11 +3,19 @@
 
 namespace MY_NET
 {
+	double normal_distribution(double x,double mean,double var)
+	{
+		double pi=3.1415927;
+		double stv=sqrt(var);
+
+		double out1=exp(-(x-mean)*(x-mean)/(2*var));
+		double out2=1/(sqrt(2*pi)*stv);
+		return out1*out2;	
+	}
+
 	double inverse_cdf(double pick,double mean,double var,double min,double max)
 	{
 		double step=0.01;		
-		double pi=3.1415927;
-		double stv=sqrt(var);
 		int len;
 		double sum,x,val;
 		double mid;
@@ -19,18 +27,14 @@ namespace MY_NET
 			len=int((mid-min)/step);
 			sum=0;
 			for(int i=0;i<len;++i){
-				x=min+(double)i*step-mean;
-				val=exp(-(x*x)/(2*var))*(1/(sqrt(2*pi)*stv))*step;
+				x=min+(double)i*step;
+				val=normal_distribution(x,mean,var)*step;
 				sum+=val;
 			}
 			//printf("sum %lf pick %lf min %lf mid %lf max %lf\n",sum,pick,b_min,mid,b_max);
-			if(abs(sum-pick)<0.000001 || abs(b_min-b_max)<0.00001) break;
-			else if(sum>pick){
-				b_max=mid;	
-			}
-			else{
-				b_min=mid;
-			}
+			if(abs(sum-pick)<0.0000001 || abs(b_min-b_max)<0.000001) break;
+			else if(sum>pick) b_max=mid;	
+			else b_min=mid;
 		}
 		return mid;
 	}
@@ -94,9 +98,34 @@ namespace MY_NET
 		for(int i=0;i<row;++i){
 			for(int j=0;j<col;++j){
 				tmp=double(rand()%10000);
-				tmp=tmp*0.00001;
-				var=2.0/double(row+col)*32.0*32.0;
+				tmp=tmp*0.0001;
+				var=2.0/double(row+col);
 				val[i][j]=inverse_cdf(tmp,0,var,-1,1);	
+				//val[i][j]=tmp;
+				err[i][j]=0;	
+			}
+		}
+	}
+
+	type_2D::type_2D(int i_row,int i_col,int img_size)
+	{
+		row=i_row;
+		col=i_col;
+	
+		val=(double**)malloc(sizeof(double*)*row);
+		err=(double**)malloc(sizeof(double*)*row);
+		bias=(double**)malloc(sizeof(double*)*row);
+		for(int i=0;i<row;++i) val[i]=(double*)malloc(sizeof(double)*col);
+		for(int i=0;i<row;++i) err[i]=(double*)malloc(sizeof(double)*col);
+		for(int i=0;i<row;++i) bias[i]=(double*)malloc(sizeof(double)*col);
+		double tmp,var;
+		for(int i=0;i<row;++i){
+			for(int j=0;j<col;++j){
+				tmp=double(rand()%10000);
+				tmp=tmp*0.0001;
+				var=2.0/(double(row+col)*double(img_size));
+				val[i][j]=inverse_cdf(tmp,0,var,-1,1);	
+				//val[i][j]=tmp;
 				err[i][j]=0;	
 			}
 		}
@@ -143,7 +172,7 @@ namespace MY_NET
 		row=i_row;
 		col=i_col;
 		image = (type_2D**)malloc(sizeof(type_2D*)*size);
-		for(int i=0;i<size;++i) image[i] = new type_2D(row,col);
+		for(int i=0;i<size;++i) image[i] = new type_2D(row,col,32*32);
 	}
 	
 	void Layer_type_2D::show_val(int idx)
