@@ -24,12 +24,19 @@ namespace MY_NET
 	void layer::affine(type_1D* in,type_2D* w,type_1D* out,double lr)
 	{
 		double sum;
+		int idx;
+
 		for(int j=0;j<w->col;++j){
 			sum=0;
 			for(int i=0;i<w->row;++i){
 				sum+=(w->val[i][j])*(out->err[i]);	
 			}
 			in->err[j]=sum;
+		}
+
+		for(int i=0;i<int(double(in->size)*0.3);++i){
+			idx=rand()%(in->size);
+			in->val[idx]=0;
 		}
 
 		for(int i=0;i<w->row;++i){
@@ -279,6 +286,15 @@ namespace MY_NET
 		int dy,dx;	
 		double err;
 		double k_value;
+
+		for(int n=0;n<i_size;++n){
+	   		for(int i=0;i<int(double(i_depth*i_width)*0.3);++i){
+				int idx=rand()%(i_depth*i_width);
+				dy=idx/i_depth;
+				dx=idx%i_width;
+				in->image[n]->val[dy][dx]=0;	
+	    	}
+		}
 
 		for(int n=0;n<i_size;++n){
 			in->image[n]->zero_err();

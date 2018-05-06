@@ -11,20 +11,21 @@ using namespace MY_NET;
 mnist train_data;
 mnist test_data;
 
-
 #define layer_size 5
 void DNN()
 {
 	srand((unsigned int)time(NULL));
 	readMnist(&train_data,&test_data);
 
-	int tr_size=100;
-	int test_size=10;
+	int tr_iter=500,dev_iter=10,batch_size=500,hit,miss;
+	double lr=0.001;
+	double mse,mean=0,var=0,stv=0,Recog,MSE,err;
 
-	int batch_size;
-	double lr=0.01;
+	int idx;
 	int layer_info[layer_size]={32*32,100,100,10,10};
 	char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
+
+	layer dev;
 
 	type_1D* x[layer_size];
 	for(int i=0;i<layer_size;++i) x[i]=new type_1D(layer_info[i]);
@@ -37,60 +38,92 @@ void DNN()
 		}
 	}
 	
+	double*** batch_tr;
+	double** batch_label;
+	int* batch_idx;
 
-	int hit;
-	int miss;
-	double mse;
-	layer train;
-	while(1){
-		hit=0;
-		miss=0;
-		mse=0;
-		for(int batch=0;batch<tr_size;++batch){
+	batch_tr=(double***)malloc(sizeof(double**)*batch_size);
+	batch_idx=(int*)malloc(sizeof(int)*batch_size);
+
+	for(int i=0;i<batch_size;++i){
+		batch_tr[i]=(double**)malloc(sizeof(double*)*32);
+		for(int j=0;j<32;++j) batch_tr[i][j]=(double*)malloc(sizeof(double)*32);
+	}
+
+	batch_label=(double**)malloc(sizeof(double*)*batch_size);
+	for(int i=0;i<batch_size;++i){
+		batch_label[i]=(double*)malloc(sizeof(double)*10);
+	}
+
+	int iteration=0;
+	while(iteration<tr_iter){
+		iteration++;
+
+		hit=0,miss=0,mse=0,mean=0,var=0,stv=0;
+		for(int i=0;i<batch_size;++i){
+			idx=rand()%60000;
+			for(int j=0;j<32;++j){
+				for(int k=0;k<32;++k){
+					batch_tr[i][j][k]=train_data.image[idx][j][k];
+					mean+=batch_tr[i][j][k];
+					var+=batch_tr[i][j][k]*batch_tr[i][j][k];
+				}
+			}
+			for(int j=0;j<10;++j){
+				batch_label[i][j]=train_data.label[idx][j];
+			}
+			batch_idx[i]=train_data.idx[idx];
+		}
+
+		mean=mean/double(batch_size*32*32);
+		var=(var/double(batch_size*32*32))-mean*mean;
+		stv=sqrt(var);
+
+		for(int batch=0;batch<batch_size;++batch){
 			for(int i=0;i<32;++i){for(int j=0;j<32;++j){ 
-				x[0]->val[i*32+j]=train_data.image[batch][i][j]*0.001;
+				x[0]->val[i*32+j]=(batch_tr[batch][i][j]-mean)/stv;
 			}}
 			
 			for(int i=0;i<layer_size-1;++i){
-				if(strcmp(function_info[i],"affine")==0) train.affine(x[i],w[i],x[i+1]);
-				if(strcmp(function_info[i],"relu")==0) train.relu(x[i],x[i+1]);
-				if(strcmp(function_info[i],"sigmoid")==0) train.sigmoid(x[i],x[i+1]);
-				if(strcmp(function_info[i],"tanh")==0) train.tanh(x[i],x[i+1]);
-				if(strcmp(function_info[i],"softmax")==0) train.softmax(x[i],x[i+1]);
+				if(strcmp(function_info[i],"affine")==0) dev.affine(x[i],w[i],x[i+1]);
+				if(strcmp(function_info[i],"relu")==0) dev.relu(x[i],x[i+1]);
+				if(strcmp(function_info[i],"sigmoid")==0) dev.sigmoid(x[i],x[i+1]);
+				if(strcmp(function_info[i],"tanh")==0) dev.tanh(x[i],x[i+1]);
+				if(strcmp(function_info[i],"softmax")==0) dev.softmax(x[i],x[i+1]);
 			}
 			
-			if(x[layer_size-1]->max_idx()==train_data.idx[batch]) hit++;
+			if(x[layer_size-1]->max_idx()==batch_idx[batch]) hit++;
 			else miss++;
 			
-			for(int i=0;i<10;++i){x[layer_size-1]->err[i]=x[layer_size-1]->val[i]-train_data.label[batch][i];}
+			for(int i=0;i<10;++i){x[layer_size-1]->err[i]=x[layer_size-1]->val[i]-batch_label[batch][i];}
 			for(int i=0;i<10;++i){mse+=(x[layer_size-1]->err[i])*(x[layer_size-1]->err[i]);}
 
 			for(int i=layer_size-2;i>-1;--i){
-				if(strcmp(function_info[i],"affine")==0) train.affine(x[i],w[i],x[i+1],lr);
-				if(strcmp(function_info[i],"relu")==0) train.relu(x[i],x[i+1],lr);
-				if(strcmp(function_info[i],"sigmoid")==0) train.sigmoid(x[i],x[i+1],lr);
-				if(strcmp(function_info[i],"tanh")==0) train.tanh(x[i],x[i+1],lr);
-				if(strcmp(function_info[i],"softmax")==0) train.softmax(x[i],x[i+1],lr);
+				if(strcmp(function_info[i],"affine")==0) dev.affine(x[i],w[i],x[i+1],lr);
+				if(strcmp(function_info[i],"relu")==0) dev.relu(x[i],x[i+1],lr);
+				if(strcmp(function_info[i],"sigmoid")==0) dev.sigmoid(x[i],x[i+1],lr);
+				if(strcmp(function_info[i],"tanh")==0) dev.tanh(x[i],x[i+1],lr);
+				if(strcmp(function_info[i],"softmax")==0) dev.softmax(x[i],x[i+1],lr);
 			}
 		}
-		printf("Train Recognition Rate %lf\n",double(hit)/(double(hit)+double(miss))*100);
-		printf("Train MSE %lf\n",sqrt(mse/double(hit+miss)));
 
-		hit=0;
-		miss=0;
-		mse=0;
-		layer test;
-		for(int tr=0;tr<test_size;++tr){
+		Recog=double(hit)/(double(hit)+double(miss))*100;
+		MSE=sqrt(mse/double(hit+miss));
+		printf("Train Recognition Rate %lf Train MSE %lf\n",Recog,MSE);
+
+		hit=0,miss=0,mse=0;
+
+		for(int tr=0;tr<dev_iter;++tr){
 			for(int i=0;i<32;++i){for(int j=0;j<32;++j){ 
-				x[0]->val[i*32+j]=test_data.image[tr][i][j]*0.001;
+				x[0]->val[i*32+j]=(test_data.image[tr][i][j]-mean)/stv;
 			}}
 			
 			for(int i=0;i<layer_size-1;++i){
-				if(strcmp(function_info[i],"affine")==0) test.affine(x[i],w[i],x[i+1]);
-				if(strcmp(function_info[i],"relu")==0) test.relu(x[i],x[i+1]);
-				if(strcmp(function_info[i],"sigmoid")==0) test.sigmoid(x[i],x[i+1]);
-				if(strcmp(function_info[i],"tanh")==0) test.tanh(x[i],x[i+1]);
-				if(strcmp(function_info[i],"softmax")==0) test.softmax(x[i],x[i+1]);
+				if(strcmp(function_info[i],"affine")==0) dev.affine(x[i],w[i],x[i+1]);
+				if(strcmp(function_info[i],"relu")==0) dev.relu(x[i],x[i+1]);
+				if(strcmp(function_info[i],"sigmoid")==0) dev.sigmoid(x[i],x[i+1]);
+				if(strcmp(function_info[i],"tanh")==0) dev.tanh(x[i],x[i+1]);
+				if(strcmp(function_info[i],"softmax")==0) dev.softmax(x[i],x[i+1]);
 			}
 			
 			if(x[layer_size-1]->max_idx()==test_data.idx[tr]) hit++;
@@ -100,8 +133,9 @@ void DNN()
 			for(int i=0;i<10;++i){mse+=(x[layer_size-1]->err[i])*(x[layer_size-1]->err[i]);}
 
 		}
-		printf("Test Recognition Rate %lf\n",double(hit)/(double(hit)+double(miss))*100);
-		printf("Test MSE %lf\n",sqrt(mse/double(hit+miss)));
+		Recog=double(hit)/(double(hit)+double(miss))*100;
+		MSE=sqrt(mse/double(hit+miss));
+		printf("Test Recognition Rate %lf Test MSE %lf\n",Recog,MSE);
 	}
 }
 
@@ -109,10 +143,17 @@ void LeNet()
 {
 	srand((unsigned int)time(NULL));
 	readMnist(&train_data,&test_data);
-	int tr_size=100;
-	int test_size=100;
+
+	int tr_iter=500,test_size=100,batch_size=100;
 	double lr=0.001;
-	int batch_size=1000;
+
+	int hit,miss;
+	layer train;
+	double*** batch_tr;
+	double** batch_label;
+	int* batch_idx;
+	double mse,mean=0,var=0,stv=0,Recog,MSE,err;
+	int idx;
 
     //conv,pool,conv,pool,conv//
 	Layer_type_2D* x0 = new Layer_type_2D(1,32,32);
@@ -136,21 +177,6 @@ void LeNet()
 	type_1D* dx3 = new type_1D(10);
 	type_1D* da3 = new type_1D(10);
 
-	int hit;
-	int miss;
-	double mse;
-	layer train;
-	double*** batch_tr;
-	double** batch_label;
-	int* batch_idx;
-	double mean=0;
-	double var=0;
-	double stv=0;
-
-	double Recog;
-	double MSE;
-	double err;
-	int idx;
 	batch_tr=(double***)malloc(sizeof(double**)*batch_size);
 	batch_idx=(int*)malloc(sizeof(int)*batch_size);
 
@@ -163,14 +189,12 @@ void LeNet()
 	for(int i=0;i<batch_size;++i){
 		batch_label[i]=(double*)malloc(sizeof(double)*10);
 	}
-	while(1)
+
+	int iteration=0;
+	while(iteration<tr_iter)
 	{
-		hit=0;
-		miss=0;
-		mse=0;
-		mean=0;
-		var=0;
-		stv=0;
+		iteration++;
+		hit=0,miss=0,mse=0,mean=0,var=0,stv=0;
 		for(int i=0;i<batch_size;++i){
 			idx=rand()%60000;
 			for(int j=0;j<32;++j){
@@ -190,13 +214,10 @@ void LeNet()
 		var=(var/double(batch_size*32*32))-mean*mean;
 		stv=sqrt(var);
 		
-		for(int i=0;i<10;++i) da3->err[i]=0;
-		mse=0;
 		for(int batch=0;batch<batch_size;++batch){
 			for(int i=0;i<32;++i){
 				for(int j=0;j<32;++j){ 
 					x0->image[0]->val[i][j]=(batch_tr[batch][i][j]-mean)/stv;
-					//x0->image[0]->val[i][j]=batch_tr[batch][i][j]*0.001;
 				}
 			}
 
@@ -237,22 +258,16 @@ void LeNet()
 			train.conv(x0,k0,x1,lr);	
 		}
 
-
-
 		Recog=double(hit)/(double(hit)+double(miss))*100;
-
 		MSE=sqrt(mse/double(hit+miss));
-		printf("Train Recognition Rate %lf Train MSE %lf\n",Recog,MSE);
+		printf("Iteration %d Train Recognition Rate %lf Train MSE %lf\n",iteration,Recog,MSE);
 
-		hit=0;
-		miss=0;
-		mse=0;
+		hit=0,miss=0,mse=0;
 		layer test;
 		for(int tr=0;tr<test_size;++tr){
 			//FORWARD
 			for(int i=0;i<32;++i){for(int j=0;j<32;++j){
 				x0->image[0]->val[i][j]=(test_data.image[tr][i][j]-mean)/stv;
-				//x0->image[0]->val[i][j]=test_data.image[tr][i][j]*0.001;
 			}}
 			
 			train.conv(x0,k0,x1);	
@@ -279,7 +294,7 @@ void LeNet()
 
 		Recog=double(hit)/(double(hit)+double(miss))*100;
 		MSE=sqrt(mse/double(hit+miss));
-		printf("Test Recognition Rate %lf Test MSE %lf\n",Recog,MSE);
+		printf("Iteration %d Test Recognition Rate %lf Test MSE %lf\n",iteration,Recog,MSE);
 	}
 }
 

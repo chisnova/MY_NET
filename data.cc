@@ -141,6 +141,16 @@ namespace MY_NET
 		}
 	}
 	
+	void type_2D::Save()
+	{
+		for(int i=0;i<row;++i){
+			for(int j=0;j<col;++j){
+				printf("%lf ",val[i][j]);
+			}
+			printf("\n");
+		}
+	}
+
 	void type_2D::show_err()
 	{
 		for(int i=0;i<row;++i){

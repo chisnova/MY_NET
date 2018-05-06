@@ -34,6 +34,7 @@ namespace MY_NET
 		type_2D(int i_row,int i_col,int img_size);
 		void show_val();
 		void show_err();
+		void Save();
 		void zero_err();
 		~type_2D();
 	};
