@@ -1,5 +1,5 @@
-#ifndef _DNN_H
-#define _DNN_H
+#ifndef _CNN_H
+#define _CNN_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +9,5 @@
 #include "data.h"
 #include "layer.h"
 
-#define layer_size 5
-
-void DNN();
-
-
+void LeNet();
 #endif

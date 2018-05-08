@@ -1,17 +1,18 @@
-#include "dnn.h"
-
+#include "w2v.h"
 using namespace MY_NET;
-void DNN()
+
+
+#define layer_size 5
+void w2v_DNN()
 {
 	srand((unsigned int)time(NULL));
-	readMnist(&train_data,&test_data);
-
+	//35661
 	int tr_iter=500,dev_iter=10,batch_size=500,hit,miss;
 	double lr=0.001;
 	double mse,mean=0,var=0,stv=0,Recog,MSE,err;
 
 	int idx;
-	int layer_info[layer_size]={32*32,100,100,10,10};
+	int layer_info[layer_size]={35661*4,200,200,35661,35661};
 	char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
 
 	layer dev;
@@ -26,6 +27,7 @@ void DNN()
 			w[i] = new type_2D(layer_info[i+1],layer_info[i]);
 		}
 	}
+	
 	double*** batch_tr;
 	double** batch_label;
 	int* batch_idx;

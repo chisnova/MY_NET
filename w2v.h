@@ -1,5 +1,5 @@
-#ifndef _DNN_H
-#define _DNN_H
+#ifndef _W2V_H
+#define _W2V_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +9,6 @@
 #include "data.h"
 #include "layer.h"
 
-#define layer_size 5
 
-void DNN();
-
-
+void w2v_DNN();
 #endif

@@ -12,4 +12,7 @@ typedef struct _MNIST_
 
 int readMnist(mnist* train,mnist* test);
 
+extern mnist train_data;
+extern mnist test_data;
+
 #endif
