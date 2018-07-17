@@ -1,48 +1,84 @@
 #include "dnn.h"
 
 using namespace MY_NET;
-
-void DNN()
+class DNN
 {
-	srand((unsigned int)time(NULL));
-	readMnist(&train_data,&test_data);
-
-	int tr_iter=500,dev_iter=100,batch_size=100,hit,miss;
-	double lr=0.01;
-	double mse,mean=0,var=0,stv=0,Recog,MSE,err;
-
+	public:
+	int tr_iter,dev_iter,batch_size,hit,miss;
+	double lr;
+	double mse,mean,var,stv,Recog,MSE,err;
 	int idx;
-	int layer_info[layer_size]={32*32,100,100,10,10};
-	char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
-
-	layer dev;
-
-	type_1D* x[layer_size];
-	for(int i=0;i<layer_size;++i) x[i]=new type_1D(layer_info[i]);
-
-	type_2D* w[layer_size];
-	int cnt=0;
-	for(int i=0;i<layer_size-1;++i){
-		if(strcmp(function_info[i],"affine")==0){
-			w[i] = new type_2D(layer_info[i+1],layer_info[i]);
-		}
-	}
 	double*** batch_tr;
 	double** batch_label;
 	int* batch_idx;
+	
+	DNN()
+	{
+		srand((unsigned int)time(NULL));
+		readMnist(&train_data,&test_data);
+		tr_iter=500;
+		dev_iter=100;
+		batch_size=100;
+		lr=0.01;
+		var=0;
+		stv=0;
+		mean=0;
 
-	batch_tr=(double***)malloc(sizeof(double**)*batch_size);
-	batch_idx=(int*)malloc(sizeof(int)*batch_size);
+		int layer_info[layer_size]={32*32,100,100,10,10};
+		char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
 
-	for(int i=0;i<batch_size;++i){
-		batch_tr[i]=(double**)malloc(sizeof(double*)*32);
-		for(int j=0;j<32;++j) batch_tr[i][j]=(double*)malloc(sizeof(double)*32);
+		layer dev;
+
+		type_1D* x[layer_size];
+		for(int i=0;i<layer_size;++i) x[i]=new type_1D(layer_info[i]);
+
+		type_2D* w[layer_size];
+		int cnt=0;
+		for(int i=0;i<layer_size-1;++i){
+			if(strcmp(function_info[i],"affine")==0){
+				w[i] = new type_2D(layer_info[i+1],layer_info[i]);
+			}
+		}
+
+		batch_tr=(double***)malloc(sizeof(double**)*batch_size);
+		batch_idx=(int*)malloc(sizeof(int)*batch_size);
+
+		for(int i=0;i<batch_size;++i){
+			batch_tr[i]=(double**)malloc(sizeof(double*)*32);
+			for(int j=0;j<32;++j) batch_tr[i][j]=(double*)malloc(sizeof(double)*32);
+		}
+
+		batch_label=(double**)malloc(sizeof(double*)*batch_size);
+		for(int i=0;i<batch_size;++i){
+			batch_label[i]=(double*)malloc(sizeof(double)*10);
+		}
 	}
-
-	batch_label=(double**)malloc(sizeof(double*)*batch_size);
-	for(int i=0;i<batch_size;++i){
-		batch_label[i]=(double*)malloc(sizeof(double)*10);
+	int inference()
+	{
+		for(int tr=0;tr<dev_iter;++tr){
+			for(int i=0;i<32;++i){for(int j=0;j<32;++j){ 
+				x[0]->val[i*32+j]=(test_data.image[tr][i][j]-mean)/stv;
+			}}
+			
+			for(int i=0;i<layer_size-1;++i){
+				if(strcmp(function_info[i],"affine")==0) dev.affine(x[i],w[i],x[i+1]);
+				if(strcmp(function_info[i],"relu")==0) dev.relu(x[i],x[i+1]);
+				if(strcmp(function_info[i],"sigmoid")==0) dev.sigmoid(x[i],x[i+1]);
+				if(strcmp(function_info[i],"tanh")==0) dev.tanh(x[i],x[i+1]);
+				if(strcmp(function_info[i],"softmax")==0) dev.softmax(x[i],x[i+1]);
+			}
+			
+			if(x[layer_size-1]->max_idx()==test_data.idx[tr]) hit++;
+			else miss++;
+			
+			for(int i=0;i<10;++i){x[layer_size-1]->err[i]=x[layer_size-1]->val[i]-test_data.label[tr][i];}
+			for(int i=0;i<10;++i){mse+=(x[layer_size-1]->err[i])*(x[layer_size-1]->err[i]);}
+		}
 	}
+};
+void DNN()
+{
+
 
 	int iteration=0;
 	while(iteration<tr_iter){
@@ -108,26 +144,7 @@ void DNN()
 
 		hit=0,miss=0,mse=0;
 
-		for(int tr=0;tr<dev_iter;++tr){
-			for(int i=0;i<32;++i){for(int j=0;j<32;++j){ 
-				x[0]->val[i*32+j]=(test_data.image[tr][i][j]-mean)/stv;
-			}}
-			
-			for(int i=0;i<layer_size-1;++i){
-				if(strcmp(function_info[i],"affine")==0) dev.affine(x[i],w[i],x[i+1]);
-				if(strcmp(function_info[i],"relu")==0) dev.relu(x[i],x[i+1]);
-				if(strcmp(function_info[i],"sigmoid")==0) dev.sigmoid(x[i],x[i+1]);
-				if(strcmp(function_info[i],"tanh")==0) dev.tanh(x[i],x[i+1]);
-				if(strcmp(function_info[i],"softmax")==0) dev.softmax(x[i],x[i+1]);
-			}
-			
-			if(x[layer_size-1]->max_idx()==test_data.idx[tr]) hit++;
-			else miss++;
-			
-			for(int i=0;i<10;++i){x[layer_size-1]->err[i]=x[layer_size-1]->val[i]-test_data.label[tr][i];}
-			for(int i=0;i<10;++i){mse+=(x[layer_size-1]->err[i])*(x[layer_size-1]->err[i]);}
 
-		}
 		Recog=double(hit)/(double(hit)+double(miss))*100;
 		MSE=sqrt(mse/double(hit+miss));
 		printf("Test Recognition Rate %lf Test MSE %lf\n",Recog,MSE);

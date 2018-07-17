@@ -7,8 +7,8 @@ mnist test_data;
 
 int main()
 {
-	//DNN();	
-	LeNet();	
+	DNN();	
+	//LeNet();	
 	return 0;	
 }
 
