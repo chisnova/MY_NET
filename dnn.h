@@ -9,9 +9,5 @@
 #include "data.h"
 #include "layer.h"
 
-#define layer_size 5
-
-void DNN();
-
 
 #endif

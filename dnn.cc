@@ -9,9 +9,7 @@ void DNN()
 
 	int tr_iter=500,dev_iter=100,batch_size=100,hit,miss;
 	double lr=0.01;
-	double mse,mean=0,var=0,stv=0,Recog,MSE,err;
-
-	int idx;
+	double mse,mean=0,var=0,stv=0,Recog,MSE,err;	int idx;
 	int layer_info[layer_size]={32*32,100,100,10,10};
 	char function_info[layer_size-1][100]={"affine","relu","affine","sigmoid"};
 
